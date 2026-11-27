@@ -1,0 +1,265 @@
+// Mindshift - Complete Prisma Schema
+// PostgreSQL database design for all features
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── AUTHENTICATION ───────────────────────────────────────────────────────────
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  passwordHash    String
+  isEmailVerified Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  profile         UserProfile?
+  preferences     UserPreferences?
+  sessions        RefreshSession[]
+  passwordResets  PasswordResetToken[]
+  activityLogs    ActivityLog[]
+  customActivities Activity[]
+  sleepSessions   SleepSession[]
+  goals           UserGoal?
+  streak          UserStreak?
+  shields         Shield[]
+  scores          DailyScore[]
+  leaderboard     LeaderboardEntry[]
+
+  @@map("users")
+}
+
+model RefreshSession {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_sessions")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+// ─── PROFILE ──────────────────────────────────────────────────────────────────
+
+model UserProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  fullName         String
+  nickname         String?
+  ageGroup         String?
+  avatarUrl        String?
+  profession       String?
+  customProfession String?
+  workload         String?
+  preferredRoutine String?
+  timezone         String   @default("UTC")
+  interests        String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model UserPreferences {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  theme                String   @default("light")
+  notificationsEnabled Boolean  @default(true)
+  reminderTime         String?
+  privacyMode          Boolean  @default(false)
+  language             String   @default("en")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+// ─── GOALS ────────────────────────────────────────────────────────────────────
+
+model UserGoal {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  wakeTime         String?  // "HH:MM"
+  bedTime          String?  // "HH:MM"
+  sleepDurationMin Int?     @default(480)
+  workoutMin       Int?     @default(30)
+  studyWorkMin     Int?     @default(480)
+  customTargets    Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_goals")
+}
+
+// ─── ACTIVITIES ───────────────────────────────────────────────────────────────
+
+model Activity {
+  id          String   @id @default(cuid())
+  userId      String?  // null = default system activity
+  name        String
+  category    String   // sleep | fitness | productivity | nutrition | mindfulness | custom
+  icon        String?
+  unit        String?
+  isDefault   Boolean  @default(false)
+  isCustom    Boolean  @default(false)
+  aliases     String[]
+  scoreWeight Float    @default(1.0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs        ActivityLog[]
+
+  @@index([userId])
+  @@index([category])
+  @@map("activities")
+}
+
+model ActivityLog {
+  id          String    @id @default(cuid())
+  userId      String
+  activityId  String
+  dateKey     String    // "YYYY-MM-DD"
+  startTime   DateTime?
+  endTime     DateTime?
+  durationMin Int?
+  quantity    Float?
+  unit        String?
+  note        String?
+  source      String    @default("manual") // manual | parsed | late_entry
+  isLateEntry Boolean   @default(false)
+  rawMessage  String?   // original natural language input
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity    Activity  @relation(fields: [activityId], references: [id])
+
+  @@index([userId, dateKey])
+  @@index([userId, activityId])
+  @@map("activity_logs")
+}
+
+// ─── SLEEP ────────────────────────────────────────────────────────────────────
+
+model SleepSession {
+  id              String    @id @default(cuid())
+  userId          String
+  dateKey         String    // "YYYY-MM-DD" (the night this sleep started)
+  bedtime         DateTime
+  wakeTime        DateTime?
+  durationMin     Int?
+  quality         String?   // good | fair | poor
+  notes           String?
+  crossesMidnight Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dateKey])
+  @@map("sleep_sessions")
+}
+
+// ─── SCORING ──────────────────────────────────────────────────────────────────
+
+model DailyScore {
+  id                  String   @id @default(cuid())
+  userId              String
+  dateKey             String   // "YYYY-MM-DD"
+  totalScore          Float    @default(0)
+  sleepScore          Float    @default(0)
+  fitnessScore        Float    @default(0)
+  productivityScore   Float    @default(0)
+  nutritionScore      Float    @default(0)
+  mindfulnessScore    Float    @default(0)
+  breakdown           Json?    // detailed per-activity breakdown
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dateKey])
+  @@index([userId])
+  @@map("daily_scores")
+}
+
+// ─── STREAKS & SHIELDS ────────────────────────────────────────────────────────
+
+model UserStreak {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  currentStreak  Int      @default(0)
+  longestStreak  Int      @default(0)
+  lastActiveDate String?  // "YYYY-MM-DD"
+  milestones     Int[]    // streak lengths when milestone reached
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_streaks")
+}
+
+model Shield {
+  id        String    @id @default(cuid())
+  userId    String
+  earnedAt  DateTime  @default(now())
+  usedAt    DateTime?
+  expiresAt DateTime
+  reason    String?
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("shields")
+}
+
+// ─── LEADERBOARD ─────────────────────────────────────────────────────────────
+
+model LeaderboardEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  period    String   // daily | weekly | monthly
+  periodKey String   // "2025-11-27" | "2025-W48" | "2025-11"
+  score     Float    @default(0)
+  rank      Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, period, periodKey])
+  @@index([period, periodKey])
+  @@map("leaderboard_entries")
+}

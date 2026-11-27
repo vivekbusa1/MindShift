@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mindshift_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mindshift
+      POSTGRES_PASSWORD: mindshift_dev
+      POSTGRES_DB: mindshift
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindshift"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mindshift_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://mindshift:mindshift_dev@postgres:5432/mindshift
+      ACCESS_TOKEN_SECRET: change_me_access_prod
+      REFRESH_TOKEN_SECRET: change_me_refresh_prod
+      PORT: 3000
+      NODE_ENV: production
+      CORS_ORIGIN: http://localhost:8081
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
