@@ -15,14 +15,7 @@ export const APP_NAME = 'Mindshift';
 export const APP_TAGLINE = 'Track. Analyze. Improve. Repeat.';
 
 export const STORAGE_KEYS = {
-  ACCOUNTS: '@mindshift/accounts_v1',
-  SESSION: '@mindshift/session_v1',
-  PROFILE: '@mindshift/profile_v1',
-  GOALS: '@mindshift/goals_v1',
-  ACTIVITIES: '@mindshift/activities_v1',
-  LOGS: '@mindshift/logs_v1',
-  STREAK: '@mindshift/streak_v1',
-  CONFIRMED_MISSED: '@mindshift/confirmed_missed_v1',
+  ONBOARDING_SEEN: '@mindshift/onboarding_seen_v1',
   SETTINGS: '@mindshift/settings_v1',
 } as const;
 

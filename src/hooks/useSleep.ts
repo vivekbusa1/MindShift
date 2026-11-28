@@ -21,6 +21,19 @@ export function useLogSleep() {
   });
 }
 
+export function useUpdateSleep() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      sleepApi.updateSession(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sleepSessions'] });
+      qc.invalidateQueries({ queryKey: ['sleepAnalysis'] });
+      qc.invalidateQueries({ queryKey: ['dailyScore'] });
+    },
+  });
+}
+
 export function useDeleteSleep() {
   const qc = useQueryClient();
   return useMutation({
