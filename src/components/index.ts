@@ -17,3 +17,4 @@ export { ReportChart, type ChartPoint } from './ReportChart';
 export { ScoreCard } from './ScoreCard';
 export { EmptyState, ErrorState, LoadingState } from './StateViews';
 export { RecoveryShieldCard, StreakCard } from './StreakAndShieldCards';
+export { ThemePickerCard } from './ThemePickerCard';

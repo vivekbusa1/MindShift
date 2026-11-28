@@ -49,7 +49,11 @@ async function main() {
 
   await prisma.userProfile.upsert({
     where: { userId: demoUser.id },
-    update: {},
+    update: {
+      city: 'Ahmedabad',
+      state: 'Gujarat',
+      country: 'India',
+    },
     create: {
       userId: demoUser.id,
       fullName: 'Demo User',
@@ -57,6 +61,9 @@ async function main() {
       ageGroup: '18-25',
       profession: 'Student',
       timezone: 'Asia/Kolkata',
+      city: 'Ahmedabad',
+      state: 'Gujarat',
+      country: 'India',
       interests: ['health', 'fitness', 'productivity'],
     },
   });

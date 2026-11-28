@@ -85,7 +85,7 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.brandHeader}>
-            <MindshiftLogo size={68} />
+            <MindshiftLogo size={96} />
             <Text style={[styles.title, { color: theme.colors.primaryText }]}>
               Welcome back
             </Text>

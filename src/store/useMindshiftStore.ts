@@ -879,6 +879,12 @@ export const useMindshiftStore = create<MindshiftState>((set, get) => ({
     const next: AppSettingsState = {
       ...get().settings,
       ...patch,
+      customTheme: patch.customTheme
+        ? {
+            ...(get().settings.customTheme ?? DEFAULT_SETTINGS.customTheme!),
+            ...patch.customTheme,
+          }
+        : get().settings.customTheme,
       notifications: {
         ...get().settings.notifications,
         ...(patch.notifications ?? {}),

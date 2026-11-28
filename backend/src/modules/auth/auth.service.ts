@@ -17,11 +17,12 @@ function generateRefreshToken(): string {
 
 export const authService = {
   async register(email: string, password: string) {
-    const existing = await authRepository.findUserByEmail(email);
+    const normalizedEmail = email.trim().toLowerCase();
+    const existing = await authRepository.findUserByEmail(normalizedEmail);
     if (existing) throw { code: 'CONFLICT', message: 'Email already registered' };
 
     const passwordHash = await argon2.hash(password);
-    const user = await authRepository.createUser(email, passwordHash);
+    const user = await authRepository.createUser(normalizedEmail, passwordHash);
 
     const accessToken = generateAccessToken(user.id, user.email);
     const refreshToken = generateRefreshToken();
@@ -36,7 +37,8 @@ export const authService = {
   },
 
   async login(email: string, password: string) {
-    const user = await authRepository.findUserByEmail(email);
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await authRepository.findUserByEmail(normalizedEmail);
     if (!user) throw { code: 'UNAUTHORIZED', message: 'Invalid email or password' };
 
     const valid = await argon2.verify(user.passwordHash, password);

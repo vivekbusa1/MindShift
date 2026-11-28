@@ -7,7 +7,17 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Send, Sparkles } from 'lucide-react-native';
+import {
+  BookOpen,
+  Droplets,
+  Dumbbell,
+  Footprints,
+  Moon,
+  Send,
+  Sparkles,
+  Sun,
+  Zap,
+} from 'lucide-react-native';
 import { QUICK_ACTIVITY_SUGGESTIONS } from '../constants';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { FONT_FAMILIES, RADIUS, SPACING } from '../theme';
@@ -19,14 +29,32 @@ interface ActivityMessageInputProps {
   placeholder?: string;
 }
 
+function SuggestionIcon({ label, color }: { label: string; color: string }) {
+  const lower = label.toLowerCase();
+  if (lower.includes('wake')) return <Sun size={13} color={color} />;
+  if (lower.includes('sleep') || lower.includes('bed')) return <Moon size={13} color={color} />;
+  if (lower.includes('water') || lower.includes('drink')) return <Droplets size={13} color={color} />;
+  if (lower.includes('workout') || lower.includes('gym') || lower.includes('exercise')) {
+    return <Dumbbell size={13} color={color} />;
+  }
+  if (lower.includes('walk') || lower.includes('run')) return <Footprints size={13} color={color} />;
+  if (lower.includes('study') || lower.includes('read') || lower.includes('work')) {
+    return <BookOpen size={13} color={color} />;
+  }
+  return <Sparkles size={13} color={color} />;
+}
+
 export function ActivityMessageInput({
   onSubmitMessage,
   suggestions = QUICK_ACTIVITY_SUGGESTIONS,
   activeSessions = [],
-  placeholder = 'Type e.g. "Wake Up", "Workout Start", "Water 250ml"...',
+  placeholder = 'e.g. "Workout 30 min", "Water 2 glasses"...',
 }: ActivityMessageInputProps) {
   const theme = useAppTheme();
   const [text, setText] = useState('');
+  const [focused, setFocused] = useState(false);
+
+  const hasText = text.trim().length > 0;
 
   const handleSend = () => {
     const trimmed = text.trim();
@@ -46,36 +74,71 @@ export function ActivityMessageInput({
         theme.shadow,
       ]}
     >
+      {/* Top Accent Bar */}
+      <View
+        style={[
+          styles.accentBar,
+          { backgroundColor: theme.colors.secondaryTeal },
+        ]}
+      />
+
+      {/* Header */}
       <View style={styles.headerRow}>
-        <View style={styles.titleRow}>
-          <Sparkles size={16} color={theme.colors.secondaryTeal} />
-          <Text style={[styles.title, { color: theme.colors.primaryText }]}>
-            Quick Activity Message
-          </Text>
-        </View>
-        {activeSessions.length > 0 ? (
+        <View style={styles.titleGroup}>
           <View
-            style={[styles.activePill, { backgroundColor: theme.colors.tealTint }]}
+            style={[
+              styles.iconBadge,
+              { backgroundColor: theme.colors.tealTint },
+            ]}
           >
-            <Text style={[styles.activePillText, { color: theme.colors.secondaryTeal }]}>
-              Active: {activeSessions.join(', ')}
+            <Zap size={16} color={theme.colors.secondaryTeal} />
+          </View>
+          <View>
+            <Text style={[styles.title, { color: theme.colors.primaryText }]}>
+              Quick Activity
+            </Text>
+            <Text style={[styles.subtitle, { color: theme.colors.secondaryText }]}>
+              Type naturally or tap a 1-tap preset
             </Text>
           </View>
-        ) : null}
+        </View>
+
+        {activeSessions.length > 0 ? (
+          <View
+            style={[styles.badgePill, { backgroundColor: theme.colors.tealTint }]}
+          >
+            <Text style={[styles.badgeText, { color: theme.colors.secondaryTeal }]}>
+              {`Active: ${activeSessions.join(', ')}`}
+            </Text>
+          </View>
+        ) : (
+          <View
+            style={[styles.badgePill, { backgroundColor: theme.colors.navyTint }]}
+          >
+            <Text style={[styles.badgeText, { color: theme.colors.primaryNavy }]}>
+              INSTANT LOG
+            </Text>
+          </View>
+        )}
       </View>
 
+      {/* Input Box */}
       <View
         style={[
           styles.inputRow,
           {
             backgroundColor: theme.colors.mutedSurface,
-            borderColor: theme.colors.border,
+            borderColor: focused
+              ? theme.colors.secondaryTeal
+              : theme.colors.border,
           },
         ]}
       >
         <TextInput
           value={text}
           onChangeText={setText}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           placeholder={placeholder}
           placeholderTextColor={theme.colors.secondaryText}
           returnKeyType="send"
@@ -89,40 +152,49 @@ export function ActivityMessageInput({
           style={({ pressed }) => [
             styles.sendBtn,
             {
-              backgroundColor: text.trim()
+              backgroundColor: hasText
                 ? theme.colors.secondaryTeal
-                : theme.colors.border,
-              opacity: pressed ? 0.85 : 1,
+                : theme.colors.primaryNavy,
+              opacity: pressed ? 0.85 : hasText ? 1 : 0.45,
             },
           ]}
         >
-          <Send size={18} color="#FFFFFF" />
+          <Send size={15} color="#FFFFFF" />
+          <Text style={styles.sendLabel}>Log</Text>
         </Pressable>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipsRow}
-      >
-        {suggestions.map((item) => (
-          <Pressable
-            key={item}
-            onPress={() => onSubmitMessage(item)}
-            style={({ pressed }) => [
-              styles.chip,
-              {
-                backgroundColor: theme.colors.tealTint,
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          >
-            <Text style={[styles.chipText, { color: theme.colors.primaryText }]}>
-              {item}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+      {/* Quick 1-Tap Presets */}
+      <View style={styles.chipsSection}>
+        <Text style={[styles.chipsHeader, { color: theme.colors.secondaryText }]}>
+          QUICK TAP
+        </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsRow}
+        >
+          {suggestions.map((item) => (
+            <Pressable
+              key={item}
+              onPress={() => onSubmitMessage(item)}
+              style={({ pressed }) => [
+                styles.chip,
+                {
+                  backgroundColor: theme.colors.mutedSurface,
+                  borderColor: theme.colors.border,
+                  opacity: pressed ? 0.72 : 1,
+                },
+              ]}
+            >
+              <SuggestionIcon label={item} color={theme.colors.secondaryTeal} />
+              <Text style={[styles.chipText, { color: theme.colors.primaryText }]}>
+                {item}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
     </View>
   );
 }
@@ -132,64 +204,104 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     padding: SPACING.base,
-    gap: SPACING.sm,
+    gap: SPACING.md,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  accentBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 6,
+    gap: 8,
+    marginTop: 2,
   },
-  titleRow: {
+  titleGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 10,
+    flex: 1,
+  },
+  iconBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
-    fontFamily: FONT_FAMILIES.semiBold,
-    fontSize: 14,
+    fontFamily: FONT_FAMILIES.bold,
+    fontSize: 15,
   },
-  activePill: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+  subtitle: {
+    fontFamily: FONT_FAMILIES.regular,
+    fontSize: 11,
+  },
+  badgePill: {
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: RADIUS.pill,
   },
-  activePillText: {
-    fontFamily: FONT_FAMILIES.semiBold,
-    fontSize: 11,
+  badgeText: {
+    fontFamily: FONT_FAMILIES.bold,
+    fontSize: 10,
+    letterSpacing: 0.4,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: RADIUS.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     paddingLeft: SPACING.md,
-    paddingRight: 6,
-    paddingVertical: 4,
+    paddingRight: 5,
+    paddingVertical: 5,
     gap: SPACING.sm,
   },
   input: {
     flex: 1,
     fontFamily: FONT_FAMILIES.regular,
-    fontSize: 14,
-    paddingVertical: 8,
+    fontSize: 13.5,
+    paddingVertical: 6,
   },
   sendBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: RADIUS.sm,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 13,
+    height: 38,
+    borderRadius: RADIUS.sm,
     justifyContent: 'center',
   },
+  sendLabel: {
+    fontFamily: FONT_FAMILIES.semiBold,
+    fontSize: 12,
+    color: '#FFFFFF',
+  },
+  chipsSection: {
+    gap: 6,
+  },
+  chipsHeader: {
+    fontFamily: FONT_FAMILIES.semiBold,
+    fontSize: 10,
+    letterSpacing: 0.6,
+  },
   chipsRow: {
-    gap: SPACING.sm,
-    paddingTop: 2,
+    gap: 8,
   },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: RADIUS.pill,
+    borderWidth: 1,
   },
   chipText: {
     fontFamily: FONT_FAMILIES.medium,

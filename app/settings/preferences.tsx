@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppHeader, LoadingState } from '../../src/components';
+import { AppHeader, LoadingState, ThemePickerCard } from '../../src/components';
 import { TIMEZONE_OPTIONS } from '../../src/constants';
 import { useAppTheme } from '../../src/hooks/useAppTheme';
 import {
@@ -23,7 +23,6 @@ export default function PreferencesScreen() {
     return <LoadingState />;
   }
 
-  const currentTheme = preferences?.theme ?? 'light';
   const currentTimezone = profile?.timezone ?? 'Asia/Kolkata';
 
   return (
@@ -38,50 +37,7 @@ export default function PreferencesScreen() {
         />
 
         {/* Theme */}
-        <View
-          style={[
-            styles.card,
-            {
-              backgroundColor: theme.colors.white,
-              borderColor: theme.colors.border,
-            },
-          ]}
-        >
-          <Text style={[styles.sectionTitle, { color: theme.colors.primaryText }]}>
-            Theme Settings
-          </Text>
-          <View style={styles.themeRow}>
-            {(['light', 'dark'] as const).map((mode) => {
-              const selected = currentTheme === mode;
-              return (
-                <Pressable
-                  key={mode}
-                  onPress={() => updatePreferences.mutate({ theme: mode })}
-                  style={[
-                    styles.themeChip,
-                    {
-                      backgroundColor: selected
-                        ? theme.colors.secondaryTeal
-                        : theme.colors.mutedSurface,
-                      borderColor: selected
-                        ? theme.colors.secondaryTeal
-                        : theme.colors.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.themeText,
-                      { color: selected ? '#FFFFFF' : theme.colors.primaryText },
-                    ]}
-                  >
-                    {mode === 'light' ? 'Mindshift Light (Default)' : 'Navy Dark'}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
+        <ThemePickerCard />
 
         {/* Notifications */}
         <View

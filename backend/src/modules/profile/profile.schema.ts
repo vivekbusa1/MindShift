@@ -4,12 +4,15 @@ export const updateProfileSchema = z.object({
   fullName: z.string().min(1).optional(),
   nickname: z.string().optional(),
   ageGroup: z.string().optional(),
-  avatarUrl: z.string().url().optional().nullable(),
+  avatarUrl: z.string().optional().nullable(),
   profession: z.string().optional(),
   customProfession: z.string().optional(),
   workload: z.string().optional(),
   preferredRoutine: z.string().optional(),
   timezone: z.string().optional(),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().nullable(),
+  country: z.string().optional().nullable(),
   interests: z.array(z.string()).optional(),
 });
 

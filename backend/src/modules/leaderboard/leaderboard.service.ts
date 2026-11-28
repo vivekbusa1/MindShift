@@ -1,5 +1,7 @@
-import { leaderboardRepository } from './leaderboard.repository';
+import { leaderboardRepository, LocationFilter } from './leaderboard.repository';
 import { prisma } from '../../config/database';
+
+export type LeaderboardScope = 'global' | 'city' | 'state' | 'country';
 
 function getPeriodKey(period: string): string {
   const now = new Date();
@@ -11,28 +13,120 @@ function getPeriodKey(period: string): string {
   return `${now.getFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
+async function resolveScopeFilter(
+  userId: string,
+  scope: LeaderboardScope
+): Promise<{
+  filter?: LocationFilter;
+  locationValue: string | null;
+  missingLocation: boolean;
+}> {
+  if (scope === 'global') {
+    return { locationValue: null, missingLocation: false };
+  }
+
+  const profile = await prisma.userProfile.findUnique({
+    where: { userId },
+    select: { city: true, state: true, country: true },
+  });
+
+  const value = profile?.[scope]?.trim() ?? '';
+  if (!value) {
+    return { locationValue: null, missingLocation: true };
+  }
+
+  return {
+    filter: { [scope]: value },
+    locationValue: value,
+    missingLocation: false,
+  };
+}
+
 export const leaderboardService = {
-  async getLeaderboard(period: string) {
+  async getLeaderboard(
+    userId: string,
+    period: string,
+    scope: LeaderboardScope = 'global'
+  ) {
     const periodKey = getPeriodKey(period);
-    const entries = await leaderboardRepository.getLeaderboard(period, periodKey);
-    return entries.map((e, idx) => ({
-      rank: idx + 1,
-      userId: e.userId,
-      name: e.user.profile?.nickname ?? e.user.profile?.fullName ?? 'User',
-      avatarUrl: e.user.profile?.avatarUrl ?? null,
-      score: Math.round(e.score),
-    }));
+    const { filter, locationValue, missingLocation } = await resolveScopeFilter(userId, scope);
+
+    if (missingLocation) {
+      return {
+        entries: [],
+        scope,
+        locationValue: null,
+        missingLocation: true,
+      };
+    }
+
+    const entries = await leaderboardRepository.getLeaderboard(period, periodKey, filter);
+    return {
+      entries: entries.map((e, idx) => ({
+        rank: idx + 1,
+        userId: e.userId,
+        name: e.user.profile?.nickname ?? e.user.profile?.fullName ?? 'User',
+        avatarUrl: e.user.profile?.avatarUrl ?? null,
+        city: e.user.profile?.city ?? null,
+        state: e.user.profile?.state ?? null,
+        country: e.user.profile?.country ?? null,
+        score: Math.round(e.score),
+      })),
+      scope,
+      locationValue,
+      missingLocation: false,
+    };
   },
 
-  async getMyRank(userId: string, period: string) {
+  async getMyRank(
+    userId: string,
+    period: string,
+    scope: LeaderboardScope = 'global'
+  ) {
     const periodKey = getPeriodKey(period);
-    const entry = await leaderboardRepository.getMyEntry(userId, period, periodKey);
-    if (!entry) return { userId, rank: null, score: 0, period, periodKey };
-    return { userId, rank: entry.rank, score: Math.round(entry.score), period, periodKey };
+    const { filter, locationValue, missingLocation } = await resolveScopeFilter(userId, scope);
+
+    if (missingLocation) {
+      return {
+        userId,
+        rank: null,
+        score: 0,
+        period,
+        periodKey,
+        scope,
+        locationValue: null,
+        missingLocation: true,
+      };
+    }
+
+    const entries = await leaderboardRepository.getLeaderboard(period, periodKey, filter, 500);
+    const index = entries.findIndex((e) => e.userId === userId);
+    if (index === -1) {
+      return {
+        userId,
+        rank: null,
+        score: 0,
+        period,
+        periodKey,
+        scope,
+        locationValue,
+        missingLocation: false,
+      };
+    }
+
+    return {
+      userId,
+      rank: index + 1,
+      score: Math.round(entries[index].score),
+      period,
+      periodKey,
+      scope,
+      locationValue,
+      missingLocation: false,
+    };
   },
 
   async syncUserScore(userId: string) {
-    // Pull today's score and push to all three period leaderboards
     const today = new Date().toISOString().slice(0, 10);
     const score = await prisma.dailyScore.findUnique({
       where: { userId_dateKey: { userId, dateKey: today } },

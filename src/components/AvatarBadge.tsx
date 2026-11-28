@@ -1,15 +1,21 @@
 import React from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { AVATAR_OPTIONS } from '../constants';
 import { FONT_FAMILIES } from '../theme';
 
 interface AvatarBadgeProps {
   avatarId: string;
+  imageUri?: string | null;
   name?: string;
   size?: number;
 }
 
-export function AvatarBadge({ avatarId, name, size = 44 }: AvatarBadgeProps) {
+export function AvatarBadge({
+  avatarId,
+  imageUri,
+  name,
+  size = 44,
+}: AvatarBadgeProps) {
   const preset = AVATAR_OPTIONS.find((a) => a.id === avatarId) ?? AVATAR_OPTIONS[0];
   const initials = name?.trim()
     ? name
@@ -19,6 +25,22 @@ export function AvatarBadge({ avatarId, name, size = 44 }: AvatarBadgeProps) {
         .map((w) => w[0]?.toUpperCase() ?? '')
         .join('')
     : preset.initials;
+
+  if (imageUri) {
+    return (
+      <Image
+        source={{ uri: imageUri }}
+        style={[
+          styles.image,
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+          },
+        ]}
+      />
+    );
+  }
 
   return (
     <View
@@ -51,6 +73,9 @@ const styles = StyleSheet.create({
   circle: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  image: {
+    resizeMode: 'cover',
   },
   text: {
     fontFamily: FONT_FAMILIES.bold,

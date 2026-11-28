@@ -4,5 +4,6 @@ import { getTheme, MindshiftTheme } from '../theme';
 
 export function useAppTheme(): MindshiftTheme {
   const mode = useMindshiftStore((s) => s.settings.theme);
-  return useMemo(() => getTheme(mode), [mode]);
+  const customTheme = useMindshiftStore((s) => s.settings.customTheme);
+  return useMemo(() => getTheme(mode, customTheme), [mode, customTheme]);
 }

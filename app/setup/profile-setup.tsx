@@ -56,6 +56,9 @@ export default function ProfileSetupScreen() {
     existing?.preferredRoutine ?? 'morning_person'
   );
   const [timezone, setTimezone] = useState(existing?.timezone ?? 'Asia/Kolkata');
+  const [city, setCity] = useState(existing?.city ?? '');
+  const [state, setState] = useState(existing?.state ?? '');
+  const [country, setCountry] = useState(existing?.country ?? '');
   const [interests, setInterests] = useState<string[]>(existing?.interests ?? []);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,6 +94,9 @@ export default function ProfileSetupScreen() {
       workload,
       preferredRoutine,
       timezone,
+      city: city.trim() || null,
+      state: state.trim() || null,
+      country: country.trim() || null,
       interests,
     };
 
@@ -304,6 +310,28 @@ export default function ProfileSetupScreen() {
                 </Pressable>
               ))}
             </View>
+
+            <Text style={[styles.fieldLabel, { color: theme.colors.primaryText }]}>
+              Location (used for City, State & Country leaderboards)
+            </Text>
+            <CustomInput
+              label="City"
+              placeholder="e.g. Ahmedabad"
+              value={city}
+              onChangeText={setCity}
+            />
+            <CustomInput
+              label="State"
+              placeholder="e.g. Gujarat"
+              value={state}
+              onChangeText={setState}
+            />
+            <CustomInput
+              label="Country"
+              placeholder="e.g. India"
+              value={country}
+              onChangeText={setCountry}
+            />
 
             <Text style={[styles.fieldLabel, { color: theme.colors.primaryText }]}>
               Timezone (used for streaks & daily reports)

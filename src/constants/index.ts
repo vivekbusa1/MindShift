@@ -193,6 +193,12 @@ export const DEFAULT_GOALS: PersonalGoals = {
 
 export const DEFAULT_SETTINGS: AppSettingsState = {
   theme: 'light',
+  customTheme: {
+    primaryNavy: '#071F3D',
+    secondaryTeal: '#00A58A',
+    lightBackground: '#E8F8F3',
+    white: '#FFFFFF',
+  },
   notifications: {
     morningCheckIn: true,
     bedtimeReminder: true,

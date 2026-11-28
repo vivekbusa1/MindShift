@@ -1,17 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
 import { leaderboardApi } from '../services/api';
 
-export function useLeaderboard(period: 'daily' | 'weekly' | 'monthly' = 'weekly') {
+export type LeaderboardScope = 'global' | 'city' | 'state' | 'country';
+
+export function useLeaderboard(
+  period: 'daily' | 'weekly' | 'monthly' = 'weekly',
+  scope: LeaderboardScope = 'global'
+) {
   return useQuery({
-    queryKey: ['leaderboard', period],
-    queryFn: () => leaderboardApi.getLeaderboard(period),
-    staleTime: 60 * 1000, // 1 minute
+    queryKey: ['leaderboard', period, scope],
+    queryFn: () => leaderboardApi.getLeaderboard(period, scope),
+    staleTime: 60 * 1000,
   });
 }
 
-export function useMyRank(period: 'daily' | 'weekly' | 'monthly' = 'weekly') {
+export function useMyRank(
+  period: 'daily' | 'weekly' | 'monthly' = 'weekly',
+  scope: LeaderboardScope = 'global'
+) {
   return useQuery({
-    queryKey: ['myRank', period],
-    queryFn: () => leaderboardApi.getMyRank(period),
+    queryKey: ['myRank', period, scope],
+    queryFn: () => leaderboardApi.getMyRank(period, scope),
   });
 }

@@ -26,7 +26,14 @@ export type RepeatFrequency = 'daily' | 'weekdays' | 'weekends' | 'weekly' | 'as
 
 export type EventKind = 'single' | 'start' | 'end' | 'quantity';
 
-export type ThemePreference = 'light' | 'dark';
+export type ThemePreference = 'light' | 'dark' | 'custom';
+
+export interface CustomThemeConfig {
+  primaryNavy: string;
+  secondaryTeal: string;
+  lightBackground: string;
+  white: string;
+}
 
 export interface LocalAccount {
   id: string;
@@ -307,6 +314,7 @@ export interface ParsedMessageResult {
 
 export interface AppSettingsState {
   theme: ThemePreference;
+  customTheme?: CustomThemeConfig;
   notifications: NotificationPreferences;
   privacy: PrivacySettings;
   lateEntryWindowHours: number;

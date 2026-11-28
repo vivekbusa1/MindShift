@@ -34,7 +34,6 @@ import { FONT_FAMILIES, RADIUS, SPACING } from '../../src/theme';
 import { ActivityCategory, TrackingType } from '../../src/types';
 import {
   formatDateHeader,
-  formatDurationMinutes,
   getGreetingForHour,
   getTodayDateKey,
 } from '../../src/utils/date';
@@ -126,7 +125,7 @@ export default function HomeDashboardScreen() {
               <Text style={[styles.greetingTitle, { color: theme.colors.primaryText }]}>{greeting}, {nickName}</Text>
             </View>
             <Pressable onPress={() => router.push('/(tabs)/profile')}>
-              <AvatarBadge avatarId={profile?.avatarId ?? 'avatar-1'} name={nickName} size={46} />
+              <AvatarBadge avatarId={profile?.avatarId ?? 'avatar-1'} imageUri={profile?.avatarUrl} name={nickName} size={46} />
             </Pressable>
           </View>
 
@@ -284,7 +283,7 @@ export default function HomeDashboardScreen() {
       <ConfirmationModal
         visible={Boolean(logToDelete)}
         title="Delete Activity Log?"
-        message={`Remove this activity from your timeline?`}
+        message="Remove this activity from your timeline?"
         confirmLabel="Delete"
         destructive
         onCancel={() => setLogToDelete(null)}

@@ -88,10 +88,20 @@ export const streaksApi = {
 };
 
 export const leaderboardApi = {
-  getLeaderboard: (period: 'daily' | 'weekly' | 'monthly') =>
-    apiClient.get('/leaderboard', { params: { period } }).then((r) => r.data.data),
-  getMyRank: (period: 'daily' | 'weekly' | 'monthly') =>
-    apiClient.get('/leaderboard/me', { params: { period } }).then((r) => r.data.data),
+  getLeaderboard: (
+    period: 'daily' | 'weekly' | 'monthly',
+    scope: 'global' | 'city' | 'state' | 'country' = 'global'
+  ) =>
+    apiClient
+      .get('/leaderboard', { params: { period, scope } })
+      .then((r) => r.data.data),
+  getMyRank: (
+    period: 'daily' | 'weekly' | 'monthly',
+    scope: 'global' | 'city' | 'state' | 'country' = 'global'
+  ) =>
+    apiClient
+      .get('/leaderboard/me', { params: { period, scope } })
+      .then((r) => r.data.data),
 };
 
 export const reportsApi = {
